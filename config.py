@@ -1,26 +1,27 @@
 # ============================================================
-#Group Manager Bot
+# Group Manager Bot
 # Author: LearningBotsOfficial (https://github.com/LearningBotsOfficial) 
-# Support: https://t.me/LearningBotsCommunity
-# Channel: https://t.me/learning_bots
-# YouTube: https://youtube.com/@learning_bots
-# License: Open-source (keep credits, no resale)
+# Modified & Cleaned for Direct Config Usage
 # ============================================================
 
-import os
+# ================= BOT CONFIGURATION =================
 
-# Required configurations (loaded from environment variables)
-API_ID = int(os.getenv("API_ID", 0))
-API_HASH = os.getenv("API_HASH", "")
-BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-MONGO_URI = os.getenv("MONGO_URI", "")
-DB_NAME = os.getenv("DB_NAME", "Cluster0")
+# Telegram API credentials
+API_ID = 23562992                # ← yahan apna API_ID dalo
+API_HASH = "e070a310ca3e76ebc044146b9829237c"  # ← yahan apna API_HASH dalo
+BOT_TOKEN = "8305432523:AAExVYBjECaOuDmlWUbv0Cyn0ntXIrmBQEM"  # ← yahan apna Bot Token dalo
 
-# Owner and bot details
-OWNER_ID = int(os.getenv("OWNER_ID", 0))
-BOT_USERNAME = os.getenv("BOT_USERNAME", "NomadeHelpBot")
+# MongoDB
+MONGO_URI ="mongodb+srv://rj5706603:O95nvJYxapyDHfkw@cluster0.fzmckei.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+DB_NAME = "Cluster0"
 
-# Links and visuals
-SUPPORT_GROUP = os.getenv("SUPPORT_GROUP", "https://t.me/LearningBotsCommunity")
-UPDATE_CHANNEL = os.getenv("UPDATE_CHANNEL", "https://t.me/Learning_Bots")
-START_IMAGE = os.getenv("START_IMAGE", "https://files.catbox.moe/j2yhce.jpg")
+# Owner & Bot Info
+OWNER_ID = 7524032836             # ← apna Telegram User ID
+BOT_USERNAME = "@II_GROUP_HELPBOT"    # ← bot ka username (without @)
+
+# Support & Updates
+SUPPORT_GROUP = "https://t.me/+XgD3pcxE3OplYWQ1"
+UPDATE_CHANNEL = "https://t.me/narzoxbot"
+
+# Start image / banner
+START_IMAGE = "https://graph.org/file/b39584488b77377261d5d-7af6b93551275c06bb.jpg"
