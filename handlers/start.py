@@ -27,7 +27,7 @@ def register_handlers(app: Client):
 
    ✨ Hello {user}! ✨
 
-👋 I am Nomad 🤖 
+👋 I am Narzoxbot 🤖 
 
 Highlights:
 ─────────────────────────────
