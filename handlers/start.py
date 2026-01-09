@@ -46,8 +46,8 @@ Highlights:
                 InlineKeyboardButton("⌂ Update ⌂", url=UPDATE_CHANNEL),
             ],
             [
-                InlineKeyboardButton("※ ŎŴɳēŔ ※", url=f"tg://Zolvit"),
-                InlineKeyboardButton("main owner", url="@onlymrabhi"),
+                InlineKeyboardButton("※ ŎŴɳēŔ ※", url=f"https://t.me/Zolvit"),
+                InlineKeyboardButton("main owner", url="https://t.me/onlymrabhi"),
                 
             ],
             [InlineKeyboardButton("📚 Help Commands 📚", callback_data="help")]
