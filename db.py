@@ -122,4 +122,36 @@ async def get_all_users():
             users.append(document["user_id"])
     return users
 
+async def total_users_count():
+    return await db.users.count_documents({})
+
+# ==========================================================
+# 🤖 CLONE SYSTEM
+# ==========================================================
+async def add_clone(user_id, token, bot_username):
+    await db.clones.update_one(
+        {"token": token},
+        {"$set": {"user_id": user_id, "bot_username": bot_username}},
+        upsert=True
+    )
+
+async def get_clones():
+    cursor = db.clones.find({})
+    clones = []
+    async for clone in cursor:
+        clones.append(clone)
+    return clones
+
+async def remove_clone(token):
+    await db.clones.delete_one({"token": token})
+
+async def get_user_clones(user_id):
+    cursor = db.clones.find({"user_id": user_id})
+    clones = []
+    async for clone in cursor:
+        clones.append(clone)
+    return clones
+
+async def total_clones_count():
+    return await db.clones.count_documents({})
 
