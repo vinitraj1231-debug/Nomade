@@ -9,9 +9,13 @@
 
 from .start import register_handlers
 from .group_commands import register_group_commands
+from .clone import register_clone_handlers
+from .admin_panel import register_admin_handlers
 
 def register_all_handlers(app):
     register_handlers(app)
     register_group_commands(app)
-    print("✅ Group commands registered!")
+    register_clone_handlers(app)
+    register_admin_handlers(app)
+    print("✅ All handlers registered!")
 

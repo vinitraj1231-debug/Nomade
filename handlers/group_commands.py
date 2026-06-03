@@ -9,10 +9,12 @@
 
 from pyrogram import Client, filters
 from pyrogram.types import Message, ChatMemberUpdated, ChatPermissions, ChatPrivileges
-from pyrogram.enums import ChatMemberStatus
+from pyrogram.enums import ChatMemberStatus, ChatMembersFilter
 from pyrogram.raw import types
 import logging
 import db
+import random
+import asyncio
 
 DEFAULT_WELCOME = "👋 Welcome {first_name} to {title}!"
 
@@ -514,4 +516,98 @@ def register_group_commands(app: Client):
                 await message.reply_text("❌ Bot must be admin with 'Add Admins' permission to demote.")
             else:
                 await message.reply_text(f"⚠️ Failed to demote: {e}")
+
+# ==========================================================
+# Tag All Command
+# ==========================================================
+    @app.on_message(filters.group & filters.command(["tagall", "all"]))
+    async def tag_all(client, message: Message):
+        if not await is_power(client, message.chat.id, message.from_user.id):
+            return await message.reply_text("❌ Only admins can use this command.")
+
+        shuffled_emojis = ["🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔", "🍠"]
+
+        msg_text = message.text.split(maxsplit=1)[1] if len(message.command) > 1 else "Attention everyone!"
+
+        await message.reply_text("📣 Starting to tag all members...")
+
+        members = []
+        async for member in client.get_chat_members(message.chat.id):
+            if not member.user.is_bot:
+                members.append(member.user)
+
+        for i in range(0, len(members), 5):
+            chunk = members[i:i+5]
+            text = f"📣 {msg_text}\n\n"
+            for user in chunk:
+                emoji = random.choice(shuffled_emojis)
+                text += f"{emoji} {user.mention}\n"
+
+            await client.send_message(message.chat.id, text)
+            await asyncio.sleep(2) # Avoid flood
+
+# ==========================================================
+# ID and Info Commands
+# ==========================================================
+    @app.on_message(filters.command("id"))
+    async def get_id(client, message: Message):
+        chat = message.chat
+        user = message.from_user
+
+        text = f"**Chat ID:** `{chat.id}`\n"
+        text += f"**User ID:** `{user.id}`"
+
+        if message.reply_to_message:
+            text += f"\n**Replied User ID:** `{message.reply_to_message.from_user.id}`"
+
+        await message.reply_text(text)
+
+    @app.on_message(filters.command("info"))
+    async def get_info(client, message: Message):
+        user = await extract_target_user(client, message) or message.from_user
+
+        text = f"👤 **User Info**\n"
+        text += f"• **First Name:** {user.first_name}\n"
+        text += f"• **Last Name:** {user.last_name or 'N/A'}\n"
+        text += f"• **Username:** @{user.username or 'N/A'}\n"
+        text += f"• **User ID:** `{user.id}`\n"
+        text += f"• **Mention:** {user.mention}\n"
+
+        await message.reply_text(text)
+
+# ==========================================================
+# Admin List Command
+# ==========================================================
+    @app.on_message(filters.group & filters.command("adminlist"))
+    async def admin_list(client, message: Message):
+        admins = []
+        async for member in client.get_chat_members(message.chat.id, filter=ChatMembersFilter.ADMINISTRATORS):
+            admins.append(member)
+
+        text = f"👮 **Admins in {message.chat.title}**\n\n"
+        for admin in admins:
+            status = "👑 Owner" if admin.status == ChatMemberStatus.OWNER else "👮 Admin"
+            text += f"• {admin.user.mention} - {status}\n"
+
+        await message.reply_text(text)
+
+# ==========================================================
+# Purge Command
+# ==========================================================
+    @app.on_message(filters.group & filters.command("purge"))
+    async def purge_messages(client, message: Message):
+        if not await is_power(client, message.chat.id, message.from_user.id):
+            return await message.reply_text("❌ Only admins can use this command.")
+
+        if not message.reply_to_message:
+            return await message.reply_text("⚠️ Reply to a message to start purging from.")
+
+        msg_ids = []
+        for i in range(message.reply_to_message.id, message.id):
+            msg_ids.append(i)
+
+        await client.delete_messages(message.chat.id, msg_ids)
+        p_msg = await message.reply_text(f"🧹 Purged {len(msg_ids)} messages.")
+        await asyncio.sleep(5)
+        await p_msg.delete()
     
