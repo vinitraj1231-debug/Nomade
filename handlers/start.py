@@ -46,7 +46,7 @@ Highlights:
                 InlineKeyboardButton("⌂ Update ⌂", url=UPDATE_CHANNEL),
             ],
             [
-                InlineKeyboardButton("※ ŎŴɳēŔ ※", url=f"https://t.me/Zolvit"),
+                InlineKeyboardButton("※ ŎŴɳēŔ ※", url=f"https://t.me/zolvid"),
                 InlineKeyboardButton("main owner", url="https://t.me/onlymrabhi"),
                 
             ],
@@ -88,7 +88,12 @@ Choose a category below to explore commands:
                 InlineKeyboardButton("⌂ Locks ⌂", callback_data="locks"),
             ],
             [
-                InlineKeyboardButton("⌂ Moderation ⌂", callback_data="moderation")
+                InlineKeyboardButton("⌂ Moderation ⌂", callback_data="moderation"),
+                InlineKeyboardButton("⌂ Extra ⌂", callback_data="extra_help"),
+            ],
+            [
+                InlineKeyboardButton("⌂ Clone ⌂", callback_data="clone_help"),
+                InlineKeyboardButton("⌂ Fun ⌂", callback_data="fun_help"),
             ],
             [InlineKeyboardButton("🔙 Back", callback_data="back_to_start")]
         ])
@@ -219,7 +224,93 @@ Reply to a user or type
         except Exception as e:
             print(f"Error in info_callback: {e}")
             await callback_query.answer("❌ Something went wrong.", show_alert=True)
-    
+
+# ==========================================================
+# Clone Callback_query
+# ==========================================================
+    @app.on_callback_query(filters.regex("clone_help"))
+    async def clone_callback(client, callback_query):
+        text = """
+╔══════════════════╗
+      ⚙️ Clone System
+╚══════════════════╝
+
+You can create your own copy of this bot using your own bot token!
+
+Commands:
+- /clone <BOT_TOKEN> : Start a new clone bot
+- /clones            : List your cloned bots
+- /delclone <TOKEN>  : Delete a cloned bot
+
+How to get a token:
+1. Go to @BotFather
+2. Create a new bot
+3. Copy the API Token and use it here with /clone
+"""
+        buttons = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 Back", callback_data="help")]
+        ])
+        media = InputMediaPhoto(media=START_IMAGE, caption=text)
+        await callback_query.message.edit_media(media=media, reply_markup=buttons)
+        await callback_query.answer()
+
+# ==========================================================
+# Extra Help Callback_query
+# ==========================================================
+    @app.on_callback_query(filters.regex("extra_help"))
+    async def extra_callback(client, callback_query):
+        text = """
+╔══════════════════╗
+      ⚙️ Extra Commands
+╚══════════════════╝
+
+More advanced management tools:
+
+¤ /pin — Pin a message (reply)
+¤ /unpin — Unpin a message
+¤ /unpinall — Unpin all messages
+¤ /settitle <title> — Change chat title
+¤ /setdesc <desc> — Change chat description
+¤ /del — Delete a message (reply)
+¤ /zombies — Clean deleted accounts
+¤ /report — Report a user to admins
+¤ /link — Get invite link
+¤ /members — Get member count
+¤ /admins — Get admin count
+¤ /tagall — Tag all members
+"""
+        buttons = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 Back", callback_data="help")]
+        ])
+        media = InputMediaPhoto(media=START_IMAGE, caption=text)
+        await callback_query.message.edit_media(media=media, reply_markup=buttons)
+        await callback_query.answer()
+
+# ==========================================================
+# Fun Help Callback_query
+# ==========================================================
+    @app.on_callback_query(filters.regex("fun_help"))
+    async def fun_callback(client, callback_query):
+        text = """
+╔══════════════════╗
+       ⚙️ Fun Commands
+╚══════════════════╝
+
+Enjoy with these fun commands:
+
+¤ /slap — Slap someone (reply)
+¤ /hug — Hug someone (reply)
+¤ /kiss — Kiss someone (reply)
+¤ /pat — Pat someone (reply)
+
+💡 More fun commands coming soon!
+"""
+        buttons = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 Back", callback_data="help")]
+        ])
+        media = InputMediaPhoto(media=START_IMAGE, caption=text)
+        await callback_query.message.edit_media(media=media, reply_markup=buttons)
+        await callback_query.answer()
 
 # ==========================================================
 # Broadcast Command

@@ -21,8 +21,25 @@ DEFAULT_WELCOME = "👋 Welcome {first_name} to {title}!"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+flood_data = {}
+flood_cleanup_task = None
+
+async def cleanup_flood_data():
+    while True:
+        await asyncio.sleep(300) # Every 5 minutes
+        now = asyncio.get_event_loop().time()
+        for chat_id in list(flood_data.keys()):
+            for user_id in list(flood_data[chat_id].keys()):
+                if now - flood_data[chat_id][user_id]["last_time"] > 60: # 1 minute inactive
+                    del flood_data[chat_id][user_id]
+            if not flood_data[chat_id]:
+                del flood_data[chat_id]
 
 def register_group_commands(app: Client):
+
+    global flood_cleanup_task
+    if flood_cleanup_task is None:
+        flood_cleanup_task = asyncio.create_task(cleanup_flood_data())
 
     # ==========================================================
     # WELCOME SYSTEM
@@ -176,10 +193,13 @@ def register_group_commands(app: Client):
 
 
 # ==========================================================
-# handle all locks
+# handle all locks and anti-spam
 # ==========================================================
     @app.on_message(filters.group & ~filters.service, group=1)
     async def enforce_locks(client, message):
+        if not message.from_user:
+            return
+
         try:
             member = await client.get_chat_member(message.chat.id, message.from_user.id)
             if member.status in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]:
@@ -217,6 +237,40 @@ def register_group_commands(app: Client):
         if locks.get("forward") and message.forward_from:
             await message.delete()
             return
+
+        # --- Anti-Flood Logic ---
+        chat_id = message.chat.id
+        user_id = message.from_user.id
+        now = asyncio.get_event_loop().time()
+
+        if chat_id not in flood_data:
+            flood_data[chat_id] = {}
+
+        if user_id not in flood_data[chat_id]:
+            flood_data[chat_id][user_id] = {"count": 1, "last_time": now}
+        else:
+            last_time = flood_data[chat_id][user_id]["last_time"]
+            if now - last_time < 2: # Within 2 seconds
+                flood_data[chat_id][user_id]["count"] += 1
+            else:
+                flood_data[chat_id][user_id] = {"count": 1, "last_time": now}
+
+            if flood_data[chat_id][user_id]["count"] > 5: # More than 5 messages in 2 seconds
+                try:
+                    await message.delete()
+                    if flood_data[chat_id][user_id]["count"] == 6: # Only warn once
+                        await message.reply_text(f"⚠️ {message.from_user.mention}, please stop flooding!")
+                    elif flood_data[chat_id][user_id]["count"] > 10: # Mute if keeps flooding
+                         await client.restrict_chat_member(
+                            chat_id,
+                            user_id,
+                            permissions=ChatPermissions(can_send_messages=False),
+                            until_date=int(now + 300) # Mute for 5 mins
+                        )
+                         await message.reply_text(f"🔇 {message.from_user.mention} has been muted for 5 minutes due to flooding.")
+                except Exception as e:
+                    logger.error(f"Flood control error: {e}")
+
         return
 
 # ==========================================================
@@ -520,7 +574,7 @@ def register_group_commands(app: Client):
 # ==========================================================
 # Tag All Command
 # ==========================================================
-    @app.on_message(filters.group & filters.command(["tagall", "all"]))
+    @app.on_message(filters.group & filters.command(["tagall", "all", "tagaall"]))
     async def tag_all(client, message: Message):
         if not await is_power(client, message.chat.id, message.from_user.id):
             return await message.reply_text("❌ Only admins can use this command.")
@@ -529,22 +583,33 @@ def register_group_commands(app: Client):
 
         msg_text = message.text.split(maxsplit=1)[1] if len(message.command) > 1 else "Attention everyone!"
 
-        await message.reply_text("📣 Starting to tag all members...")
+        status_msg = await message.reply_text("📣 Starting to tag all members...")
 
-        members = []
-        async for member in client.get_chat_members(message.chat.id):
-            if not member.user.is_bot:
-                members.append(member.user)
+        try:
+            members = []
+            async for member in client.get_chat_members(message.chat.id):
+                if not member.user.is_bot and not member.user.is_deleted:
+                    members.append(member.user)
 
-        for i in range(0, len(members), 5):
-            chunk = members[i:i+5]
-            text = f"📣 {msg_text}\n\n"
-            for user in chunk:
-                emoji = random.choice(shuffled_emojis)
-                text += f"{emoji} {user.mention}\n"
+            if not members:
+                return await status_msg.edit_text("❌ No members found to tag.")
 
-            await client.send_message(message.chat.id, text)
-            await asyncio.sleep(2) # Avoid flood
+            for i in range(0, len(members), 5):
+                chunk = members[i:i+5]
+                text = f"📣 {msg_text}\n\n"
+                for user in chunk:
+                    emoji = random.choice(shuffled_emojis)
+                    text += f"{emoji} {user.mention}\n"
+
+                try:
+                    await client.send_message(message.chat.id, text)
+                except Exception as e:
+                    logger.error(f"Error in tagall: {e}")
+                await asyncio.sleep(2) # Avoid flood
+
+            await status_msg.edit_text(f"✅ Tagged {len(members)} members successfully!")
+        except Exception as e:
+            await status_msg.edit_text(f"❌ An error occurred: {e}")
 
 # ==========================================================
 # ID and Info Commands
